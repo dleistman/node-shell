@@ -1,18 +1,21 @@
 let fs = require('fs');
+let request = require('request');
 
-function date (file) {
+function date (file, done) {
+  let output = "";
   let currentDate = new Date(Date.now());
-  process.stdout.write(currentDate.toString());
-  prompt();
+  output = currentDate.toString();
+  done(output);
 }
 
-function ls (file) {
+function ls (file, done) {
+  let output = "";
   fs.readdir('.', (err, files) => {
     if (err) throw err;
     files.forEach( (file) => {
-      process.stdout.write(file.toString() + '\n');
+      output += file.toString() + '\n';
     });
-    prompt();
+    done(output);
   });
 }
 
@@ -47,8 +50,19 @@ function tailOutput (err, data) {
 }
 
 function tail (file) {
-  var filePath = process.env.PWD + '/' + file;
+  let filePath = process.env.PWD + '/' + file;
   fs.readFile(filePath, 'utf8', tailOutput);
+  prompt();
+}
+
+function sort (file) {
+  let filePath = process.env.PWD + '/' + file;
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    data = data.split("\n")
+    data = data.sort();
+    data = data.join("\n");
+    process.stdout.write(data);
+  });
   prompt();
 }
 
@@ -57,13 +71,14 @@ function echo (args) {
     if(element[0] === '$'){
       if(process.env.hasOwnProperty(element.slice(1))) {
         return process.env[element.slice(1)];
-      } 
+      }
       } else {
         return element;
     }
   })
   process.stdout.write(args.join(" "));
   prompt();
+  done();
 }
 
 function prompt (file) {
@@ -75,6 +90,12 @@ function pwd (file) {
   prompt();
 }
 
+function curl (url) {
+  request(url, (err, response, body) => {
+    process.stdout.write(body);
+  });
+}
+
 module.exports = {
   date,
   ls,
@@ -83,5 +104,7 @@ module.exports = {
   tail,
   echo,
   pwd,
-  prompt
+  prompt,
+  sort,
+  curl
 }
